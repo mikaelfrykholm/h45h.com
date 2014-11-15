@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>paste</title>
+    <meta charset="utf-8">
+    <style>
+      /*body, html { margin: 0; padding: 0; height: 100%; }*/
+      #data { font-family: monospace; width: 100%; height: 85vh; top: 50px; right: 0; bottom: 0; left: 0; display: block; margin: 0; border: 1; resize: none; -moz-box-sizing: padding-box; -webkit-box-sizing: border-box; box-sizing: padding-box; padding: 8px; }
+      #submit { position: absolute; top: 1ex; right: 1ex; font-size: 1.2em; }
+    </style>
+  </head>
+  <body>
+<p><code>
+curl -T my_file.mp3 http://h45h.com/
+</code>
+</p>
+    <form action="." method="post">
+      <textarea autofocus id="data" name="data"></textarea>
+      <button accesskey="s" id="submit" type="submit">pa<u>s</u>te</button>
+    </form>
+    <script>
+      document.getElementById("data").addEventListener("drop", function(event) {
+        try {
+					console.log(event);
+          event.preventDefault();
+          event.stopPropagation(); 
+          var dt = event.dataTransfer;
+          var files = dt.files;
+          var reader = new FileReader();
+          reader.addEventListener("loadend", function() {
+            document.getElementById("data").value = reader.result;
+          });
+					console.log(files);
+					console.log(reader);
+          reader.readAsText(files[0]);
+				} catch (e) {
+				console.log(e);
+			}
+      }, false);
+      document.getElementById("data").addEventListener("dragover", function(event) {
+        event.stopPropagation(); 
+        event.preventDefault();
+      }, false);
+    </script>
+  </body>
+</html>
