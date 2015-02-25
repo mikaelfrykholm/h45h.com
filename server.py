@@ -25,10 +25,11 @@ class MainHandler(tornado.web.RequestHandler):
                     self.set_header('Content-Disposition',' inline; filename="{}"'.format(orig_filename))
                 except IOError:
                     pass
+                self.set_header('content-length',os.stat(f.fileno()).st_size)
                 if head:
-                   self.set_header('content-length',os.stat(f.fileno()).st_size)
-                else:
-                    self.write(f.read())
+                   self.finish()
+                   return
+                self.write(f.read())
                 self.finish()
         except IOError:
             raise tornado.web.HTTPError(404)
@@ -60,11 +61,8 @@ application = tornado.web.Application([
 
 if __name__ == "__main__":
     tornado.options.parse_command_line()
+    path = os.path.join(os.path.join(os.path.dirname(__file__)), 'files')
+    if not os.path.exists(path):
+        os.makedirs(path)
     application.listen(8888)
     tornado.ioloop.IOLoop.instance().start()
-
-
-class RestHandler(tornado.web.RequestHandler):
-    def get(self, arg): 
-        self.set_header("Content-Type", "application/json")
-        self.write()
