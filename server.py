@@ -82,9 +82,12 @@ application = tornado.web.Application([
 ], debug=True)
 
 if __name__ == "__main__":
+    # Server options
+    define('port', default=8888, help='TCP port to listen on')
+
     tornado.options.parse_command_line()
     path = os.path.join(os.path.join(os.path.dirname(__file__)), 'files')
     if not os.path.exists(path):
         os.makedirs(path)
-    application.listen(8888)
+    application.listen(options.port)
     tornado.ioloop.IOLoop.instance().start()
