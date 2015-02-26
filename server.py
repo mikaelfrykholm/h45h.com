@@ -56,7 +56,19 @@ class MainHandler(tornado.web.RequestHandler):
             mimetype = Popen(["file", "-b","--mime-type", f.name], stdout=PIPE).communicate()[0].decode('utf8').strip()
             attrs['user.Content-Type'] = mimetype.encode('utf-8')
             attrs['user.filename'] =  arg.encode('utf-8')
-        self.write('http://h45h.com/{}\n'.format(filename))       
+            self.write('http://h45h.com/{}\n'.format(f.name))
+            self.write(self.transcode(f.name, mimetype))
+
+    def transcode(self, filename, mimetype):
+        outputs = []
+        if 'video' in mimetype:
+            if not 'mp4' in mimetype:
+                outputs.append(filename+'.mp4')
+            outputs.append(filename+'.mkv')
+        elif 'audio' in mimetype:
+            outputs.append(filename+'.mp3')
+            outputs.append(filename+'.opus')
+        return Popen(["ffmpeg", "-i", filename]+outputs , stdout=PIPE).communicate()[0].decode('utf8').strip()
 
 application = tornado.web.Application([
     (r"/(.*\.html)", tornado.web.StaticFileHandler,     dict(path=os.path.join(os.path.dirname(__file__)))),
