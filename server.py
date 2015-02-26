@@ -6,6 +6,8 @@ from subprocess import Popen, PIPE
 import tornado.ioloop
 import tornado.web
 from tornado.options import define, options
+
+# There are two 'xattr' (xattr and pyxattr) modules in the wild, we try to be compatible with both
 import xattr
 
 class MainHandler(tornado.web.RequestHandler):
@@ -18,14 +20,15 @@ class MainHandler(tornado.web.RequestHandler):
         path = os.path.join('files',arg)
         try:
             with open(path,"rb") as f:
-                attrs = xattr.xattr(f)
+                attrs = self.get_xattrs(f)
+
                 self.set_header("Expires", datetime.datetime.utcnow() + datetime.timedelta(1000000)) 
                 if 'user.Content-Type' in attrs:
                     self.set_header("Content-Type", attrs['user.Content-Type'].decode('utf-8'))
                 try:
                     orig_filename = attrs.get('user.filename').decode('utf-8')
                     self.set_header('Content-Disposition',' inline; filename="{}"'.format(orig_filename))
-                except IOError:
+                except (AttributeError, IOError):
                     pass
                 self.set_header('content-length',os.stat(f.fileno()).st_size)
                 if head:
@@ -46,19 +49,17 @@ class MainHandler(tornado.web.RequestHandler):
         filename = base64.urlsafe_b64encode(hashlib.sha256(file_body).digest()).decode('utf-8') 
         with open(os.path.join('files', filename), "wb") as f:
             f.write(file_body)
-            attrs = xattr.xattr(f)
             mimetype = Popen(["file", "-b","--mime-type", f.name], stdout=PIPE).communicate()[0].decode('utf8').strip()
-            attrs['user.Content-Type'] = mimetype.encode('utf-8')
+            self.set_xattr(f, 'user.Content-Type', mimetype.encode('utf-8'))
         self.write('<html><body><a href="http://' + self.get_request_header('Host') + '/{}"></body></html>{}'.format(filename,filename))
 
     def put(self, arg):
         filename = base64.urlsafe_b64encode(hashlib.sha256(self.request.body).digest()).decode('utf-8')
         with open(os.path.join('files',filename),"wb") as f:
             f.write(self.request.body)
-            attrs = xattr.xattr(f)
             mimetype = Popen(["file", "-b","--mime-type", f.name], stdout=PIPE).communicate()[0].decode('utf8').strip()
-            attrs['user.Content-Type'] = mimetype.encode('utf-8')
-            attrs['user.filename'] =  arg.encode('utf-8')
+            self.set_xattr(f, 'user.Content-Type', mimetype.encode('utf-8'))
+            self.set_xattr(f, 'user.filename', arg.encode('utf-8'))
             self.write('http://' + self.get_request_header('Host') + '/{}\n'.format(f.name))
             self.write(self.transcode(f.name, mimetype))
 
@@ -75,6 +76,28 @@ class MainHandler(tornado.web.RequestHandler):
 
     def get_request_header(self, header):
         return self.request.headers.get(header)
+
+    ### item is a file object, filename or file-like object
+    def get_xattrs(self, item):
+        try:
+            return xattr.xattr(item)
+        except AttributeError:
+            # we are using python3-pyxattr
+            attrs = {}
+            for aname in {'user.Content-Type', 'user.filename'}:
+                try:
+                    attrs[i] = xattr.get(item, name)
+                except:
+                    pass
+        return attrs
+
+    ### item is a file object, filename or file-like object
+    def set_xattr(self, item, name, value):
+        try:
+            xattr.xattr(item).set(name, value)
+        except AttributeError:
+            # we are using python3-pyxattr
+            xattr.set(item, name, value)
 
 application = tornado.web.Application([
     (r"/(.*\.html)", tornado.web.StaticFileHandler,     dict(path=os.path.join(os.path.dirname(__file__)))),
