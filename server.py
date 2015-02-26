@@ -23,8 +23,8 @@ class MainHandler(tornado.web.RequestHandler):
                 attrs = self.get_xattrs(f)
 
                 self.set_header("Expires", datetime.datetime.utcnow() + datetime.timedelta(1000000)) 
-                if 'user.Content-Type' in attrs:
-                    self.set_header("Content-Type", attrs['user.Content-Type'].decode('utf-8'))
+                if 'user.mime_type' in attrs:
+                    self.set_header("Content-Type", attrs['user.mime_type'].decode('utf-8'))
                 try:
                     orig_filename = attrs.get('user.filename').decode('utf-8')
                     self.set_header('Content-Disposition',' inline; filename="{}"'.format(orig_filename))
@@ -50,7 +50,7 @@ class MainHandler(tornado.web.RequestHandler):
         with open(os.path.join('files', filename), "wb") as f:
             f.write(file_body)
             mimetype = Popen(["file", "-b","--mime-type", f.name], stdout=PIPE).communicate()[0].decode('utf8').strip()
-            self.set_xattr(f, 'user.Content-Type', mimetype.encode('utf-8'))
+            self.set_xattr(f, 'user.mime_type', mimetype.encode('utf-8'))
         self.write('<html><body><a href="http://' + self.get_request_header('Host') + '/{}"></body></html>{}'.format(filename,filename))
 
     def put(self, arg):
@@ -58,7 +58,7 @@ class MainHandler(tornado.web.RequestHandler):
         with open(os.path.join('files',filename),"wb") as f:
             f.write(self.request.body)
             mimetype = Popen(["file", "-b","--mime-type", f.name], stdout=PIPE).communicate()[0].decode('utf8').strip()
-            self.set_xattr(f, 'user.Content-Type', mimetype.encode('utf-8'))
+            self.set_xattr(f, 'user.mime_type', mimetype.encode('utf-8'))
             self.set_xattr(f, 'user.filename', arg.encode('utf-8'))
             self.write('http://' + self.get_request_header('Host') + '/{}\n'.format(f.name))
             self.write(self.transcode(f.name, mimetype))
@@ -84,7 +84,7 @@ class MainHandler(tornado.web.RequestHandler):
         except AttributeError:
             # we are using python3-pyxattr
             attrs = {}
-            for aname in {'user.Content-Type', 'user.filename'}:
+            for aname in {'user.mime_type', 'user.filename'}:
                 try:
                     attrs[i] = xattr.get(item, name)
                 except:
