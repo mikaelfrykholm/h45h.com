@@ -65,11 +65,11 @@ class MainHandler(tornado.web.RequestHandler):
 
     def transcode(self, filename, mimetype):
         outputs = []
-        if 'video' in mimetype:
-            if not 'mp4' in mimetype:
+        if mimetype[:5] == 'video':
+            if not mimetype[6:] == 'mp4':
                 outputs.append(filename+'.mp4')
             outputs.append(filename+'.mkv')
-        elif 'audio' in mimetype:
+        elif mimetype[:5] == 'audio':
             outputs.append(filename+'.mp3')
             outputs.append(filename+'.opus')
         return Popen(["ffmpeg", "-i", filename]+outputs , stdout=PIPE).communicate()[0].decode('utf8').strip()
