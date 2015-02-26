@@ -20,8 +20,8 @@ class MainHandler(tornado.web.RequestHandler):
             with open(path,"rb") as f:
                 attrs = xattr.xattr(f)
                 self.set_header("Expires", datetime.datetime.utcnow() + datetime.timedelta(1000000)) 
-                if 'user.Content-Type' in xattrs:
-                    self.set_header("Content-Type", xattrs['user.Content-Type'].decode('utf-8'))
+                if 'user.Content-Type' in attrs:
+                    self.set_header("Content-Type", attrs['user.Content-Type'].decode('utf-8'))
                 try:
                     orig_filename = attrs.get('user.filename').decode('utf-8')
                     self.set_header('Content-Disposition',' inline; filename="{}"'.format(orig_filename))
