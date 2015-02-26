@@ -11,7 +11,7 @@
   </head>
   <body>
 <p><code>
-curl -T my_file.mp3 h45h.com
+curl -T my_file.mp3 {{hostname}}
 </code>
 </p>
     <form action="." method="post">
@@ -23,7 +23,7 @@ curl -T my_file.mp3 h45h.com
         try {
 					console.log(event);
           event.preventDefault();
-          event.stopPropagation(); 
+          event.stopPropagation();
           var dt = event.dataTransfer;
           var files = dt.files;
           var reader = new FileReader();
@@ -38,7 +38,7 @@ curl -T my_file.mp3 h45h.com
 			}
       }, false);
       document.getElementById("data").addEventListener("dragover", function(event) {
-        event.stopPropagation(); 
+        event.stopPropagation();
         event.preventDefault();
       }, false);
     </script>

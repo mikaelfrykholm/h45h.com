@@ -11,7 +11,10 @@ import xattr
 class MainHandler(tornado.web.RequestHandler):
     def get(self, arg, head=False):
         if not arg:
-            self.redirect("/post.html")
+            t = tornado.template.Loader(os.path.join(os.getcwd(), 'templates'))
+            self.write(t.load("post.html").generate(hostname=self.get_request_header('Host')))
+            return
+
         path = os.path.join('files',arg)
         try:
             with open(path,"rb") as f:
@@ -46,7 +49,7 @@ class MainHandler(tornado.web.RequestHandler):
             attrs = xattr.xattr(f)
             mimetype = Popen(["file", "-b","--mime-type", f.name], stdout=PIPE).communicate()[0].decode('utf8').strip()
             attrs['user.Content-Type'] = mimetype.encode('utf-8')
-        self.write('<html><body><a href="http://h45h.com/{}"></body></html>{}'.format(filename,filename))
+        self.write('<html><body><a href="http://' + self.get_request_header('Host') + '/{}"></body></html>{}'.format(filename,filename))
 
     def put(self, arg):
         filename = base64.urlsafe_b64encode(hashlib.sha256(self.request.body).digest()).decode('utf-8')
@@ -56,7 +59,7 @@ class MainHandler(tornado.web.RequestHandler):
             mimetype = Popen(["file", "-b","--mime-type", f.name], stdout=PIPE).communicate()[0].decode('utf8').strip()
             attrs['user.Content-Type'] = mimetype.encode('utf-8')
             attrs['user.filename'] =  arg.encode('utf-8')
-            self.write('http://h45h.com/{}\n'.format(f.name))
+            self.write('http://' + self.get_request_header('Host') + '/{}\n'.format(f.name))
             self.write(self.transcode(f.name, mimetype))
 
     def transcode(self, filename, mimetype):
@@ -69,6 +72,9 @@ class MainHandler(tornado.web.RequestHandler):
             outputs.append(filename+'.mp3')
             outputs.append(filename+'.opus')
         return Popen(["ffmpeg", "-i", filename]+outputs , stdout=PIPE).communicate()[0].decode('utf8').strip()
+
+    def get_request_header(self, header):
+        return self.request.headers.get(header)
 
 application = tornado.web.Application([
     (r"/(.*\.html)", tornado.web.StaticFileHandler,     dict(path=os.path.join(os.path.dirname(__file__)))),
