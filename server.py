@@ -72,7 +72,7 @@ class MainHandler(tornado.web.RequestHandler):
         elif mimetype[:5] == 'audio':
             outputs.append(filename+'.mp3')
             outputs.append(filename+'.opus')
-        return Popen(["ffmpeg", "-i", filename]+outputs , stdout=PIPE).communicate()[0].decode('utf8').strip()
+        return Popen([options.transcoder, "-i", filename]+outputs , stdout=PIPE).communicate()[0].decode('utf8').strip()
 
     def get_request_header(self, header):
         return self.request.headers.get(header)
@@ -107,6 +107,7 @@ application = tornado.web.Application([
 if __name__ == "__main__":
     # Server options
     define('port', default=8888, help='TCP port to listen on')
+    define('transcoder', default='ffmpeg', help='The ffmpeg/avconv CLI compatible transcoder to use for multimedia.')
 
     tornado.options.parse_command_line()
     path = os.path.join(os.path.join(os.path.dirname(__file__)), 'files')
