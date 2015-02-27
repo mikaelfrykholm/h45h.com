@@ -1,4 +1,3 @@
-import base64
 import datetime
 import hashlib
 import os
@@ -49,7 +48,7 @@ class MainHandler(tornado.web.RequestHandler):
         if not file_body:
             self.finish()
             return
-        filename = base64.urlsafe_b64encode(hashlib.sha256(file_body).digest()).decode('utf-8') 
+        filename = hashlib.sha256(file_body).digest().decode('utf-8')
         with open(os.path.join('files', filename), "wb") as f:
             f.write(file_body)
             mimetype = Popen(["file", "-b","--mime-type", f.name], stdout=PIPE).communicate()[0].decode('utf8').strip()
@@ -57,7 +56,7 @@ class MainHandler(tornado.web.RequestHandler):
         self.write('<html><body><a href="http://' + self.get_request_header('Host') + '/{}"></body></html>{}'.format(filename,filename))
 
     def put(self, arg):
-        filename = base64.urlsafe_b64encode(hashlib.sha256(self.request.body).digest()).decode('utf-8')
+        filename = hashlib.sha256(self.request.body).digest().decode('utf-8')
         with open(os.path.join('files',filename),"wb") as f:
             f.write(self.request.body)
             mimetype = Popen(["file", "-b","--mime-type", f.name], stdout=PIPE).communicate()[0].decode('utf8').strip()
