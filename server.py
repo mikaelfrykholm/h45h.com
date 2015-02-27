@@ -16,9 +16,6 @@ class MainHandler(tornado.web.RequestHandler):
             self.write(t.load("post.html").generate(hostname=self.get_request_header('Host')))
             return
 
-        if not arg[:5] == 'files':
-            raise tornado.web.HTTPError(404)
-
         path = os.path.join('files', os.path.basename(arg))
         try:
             with open(path,"rb") as f:
@@ -48,7 +45,7 @@ class MainHandler(tornado.web.RequestHandler):
         if not file_body:
             self.finish()
             return
-        filename = hashlib.sha256(file_body).digest().decode('utf-8')
+        filename = hashlib.sha256(file_body).hexdigest()
         with open(os.path.join('files', filename), "wb") as f:
             f.write(file_body)
             mimetype = Popen(["file", "-b","--mime-type", f.name], stdout=PIPE).communicate()[0].decode('utf8').strip()
@@ -56,7 +53,7 @@ class MainHandler(tornado.web.RequestHandler):
         self.write('<html><body><a href="http://' + self.get_request_header('Host') + '/{}"></body></html>{}'.format(filename,filename))
 
     def put(self, arg):
-        filename = hashlib.sha256(self.request.body).digest().decode('utf-8')
+        filename = hashlib.sha256(self.request.body).hexdigest()
         with open(os.path.join('files',filename),"wb") as f:
             f.write(self.request.body)
             mimetype = Popen(["file", "-b","--mime-type", f.name], stdout=PIPE).communicate()[0].decode('utf8').strip()
