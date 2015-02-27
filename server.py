@@ -17,7 +17,10 @@ class MainHandler(tornado.web.RequestHandler):
             self.write(t.load("post.html").generate(hostname=self.get_request_header('Host')))
             return
 
-        path = os.path.join('files',arg)
+        if not arg[:5] == 'files':
+            raise tornado.web.HTTPError(404)
+
+        path = os.path.join('files', os.path.basename(arg))
         try:
             with open(path,"rb") as f:
                 attrs = self.get_xattrs(f)
