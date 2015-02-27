@@ -70,6 +70,7 @@ class MainHandler(tornado.web.RequestHandler):
         outputs = []
         if mimetype[:5] == 'video':
             if not mimetype[6:] == 'mp4':
+                outputs.extend(['-strict', 'experimental'])
                 outputs.append(filename+'.mp4')
             outputs.append(filename+'.mkv')
         elif mimetype[:5] == 'audio':
