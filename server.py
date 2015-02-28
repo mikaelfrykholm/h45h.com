@@ -57,6 +57,8 @@ class MainHandler(tornado.web.RequestHandler):
         with open(os.path.join('files',filename),"wb") as f:
             f.write(self.request.body)
             mimetype = Popen(["file", "-b","--mime-type", f.name], stdout=PIPE).communicate()[0].decode('utf8').strip()
+            if 'audio' in mimetype or 'video' in mimetype: #mediainfo is much more accurate
+                mimetype = Popen(["mediainfo", "--inform=General;%InternetMediaType%", f.name], stdout=PIPE).communicate()[0].decode('utf8').strip()
             self.set_xattr(f, 'user.mime_type', mimetype.encode('utf-8'))
             self.set_xattr(f, 'user.filename', arg.encode('utf-8'))
             self.write('http://' + self.get_request_header('Host') + '/{}\n'.format(f.name))
