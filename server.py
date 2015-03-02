@@ -50,7 +50,7 @@ class MainHandler(tornado.web.RequestHandler):
             f.write(file_body)
             mimetype = Popen(["file", "-b","--mime-type", f.name], stdout=PIPE).communicate()[0].decode('utf8').strip()
             self.set_xattr(f, 'user.mime_type', mimetype.encode('utf-8'))
-        self.write('<html><body><a href="//' + self.get_request_header('Host') + '/{}">{}</a></body></html>'.format(filename,filename))
+        self.write("<!DOCTYPE html>\n" + '<html><body><a href="//' + self.get_request_header('Host') + '/{}">{}</a></body></html>'.format(filename,filename))
 
     def put(self, arg):
         filename = hashlib.sha256(self.request.body).hexdigest()
