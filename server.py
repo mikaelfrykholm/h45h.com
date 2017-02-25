@@ -73,5 +73,5 @@ if __name__ == "__main__":
     path = os.path.join(os.path.join(os.path.dirname(__file__)), 'files')
     if not os.path.exists(path):
         os.makedirs(path)
-    application.listen(8888)
+    application.listen(8888, xheaders=True)
     tornado.ioloop.IOLoop.instance().start()
