@@ -1,0 +1,16 @@
+[Unit]
+Description=h45h.com
+After=syslog.target
+
+[Service]
+Type=simple
+User=mikael
+Group=mikael
+WorkingDirectory=/var/www/h45h.com
+ExecStart=/var/www/h45h.com/server.py
+StandardOutput=syslog
+StandardError=syslog
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
