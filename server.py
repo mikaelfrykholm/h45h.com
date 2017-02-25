@@ -18,7 +18,11 @@ class MainHandler(tornado.web.RequestHandler):
                 attrs = xattr.xattr(f)
                 self.set_header("Expires", datetime.datetime.utcnow() + datetime.timedelta(1000000)) 
                 if 'user.Content-Type' in attrs:
-                    self.set_header("Content-Type", attrs['user.Content-Type'].decode('utf-8'))
+                    mimetype = attrs['user.Content-Type'].decode('utf-8')
+                else:
+                    mimetype = Popen(["file","-b","--mime-type", path], stdout=PIPE).communicate()[0].decode('utf8').strip()
+                self.set_header("Content-Type", mimetype)
+
                 try:
                     orig_filename = attrs.get('user.filename').decode('utf-8')
                     self.set_header('Content-Disposition',' inline; filename="{}"'.format(orig_filename))
@@ -43,6 +47,7 @@ class MainHandler(tornado.web.RequestHandler):
         filename = base64.urlsafe_b64encode(hashlib.sha256(file_body).digest()).decode('utf-8') 
         with open(os.path.join('files', filename), "wb") as f:
             f.write(file_body)
+            f.flush()
             attrs = xattr.xattr(f)
             mimetype = Popen(["file", "-b","--mime-type", f.name], stdout=PIPE).communicate()[0].decode('utf8').strip()
             attrs['user.Content-Type'] = mimetype.encode('utf-8')
